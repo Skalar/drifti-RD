@@ -19,4 +19,6 @@ won't run on the plafrom linux/arm64, or the Apple M1 chip
 This takes quite a while, a url is uploaded, the file is copied, opened, converted to RGB, then to a tensor. Afterwhich it passes through the model (this part is practially instintaneous)
 
 
-Use the attached create_model.py to retrain the additional model - eventually this may become an endpoint. You can update the model.csv file with the new training data, and then you should just be able to run 'python create_model.py' and then rebuild and rerun the docker image
+Use the attached create_model.py to retrain the additional model - eventually this may become an endpoint. You can update the model.csv file with the new training data, and then you will be able to run 'python create_model.py' and then rebuild and rerun the docker image.
+In order to run this script you must have python downloaded, and the dependencies installed. You can either see the attached require.txt or run 'python -m pip install --upgrade pip pandas numpy Pillow tensorflow'
+Alternatively you can upload these files to Google Colab which will have all dependencies installed and run the script there
