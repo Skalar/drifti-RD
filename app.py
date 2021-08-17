@@ -86,7 +86,7 @@ def pred_imgs():
         form = request.get_json()
         img_list = form.get("imgs")
     except Exception as e:
-        return "invalid parameters: {} EX:{}".format(form,e),400
+        return "invalid parameters: {} EX:{}".format(request.get_data(),e),400
     try:
         img_arr = np.array([conv(i) for i in img_list])
         return {img_list[i]:m.classify(pred) for i,pred in enumerate(m.predict(img_arr))}

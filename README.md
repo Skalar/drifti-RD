@@ -8,7 +8,7 @@ STOP: docker stop tf1
 
 TEST: curl -G -d img=https://prod-5929f14.s3.eu-north-1.amazonaws.com/accounts/136/files/ck5du6wwc006c07qx9j596su9 localhost:5000/api/predict OR .../api/predict?img=https%3A%2F%2Fprod-5929f14.s3.eu-north-1.amazonaws.com%2Faccounts%2F136%2Ffiles%2Fck6izzznq01e008oybkak9k8j
 
-TEST_MULTIPLE: curl -i -X POST -H "Content-Type: application/json" -d "{\"imgs\":[\"https://prod-c467854.s3.eu-north-1.amazonaws.com/accounts/128/files/3oXVxlCDCDjxnh9sPYA7g\",\"https://prod-5929f14.s3.eu-north-1.amazonaws.com/accounts/136/files/ck57u3urw001d07hd6lbe2ciz\"]}" localhost:5000/api/predict
+TEST_MULTIPLE: curl -i -X POST -H "Content-Type: application/json" -d "{\\\"imgs\\\":[\\\"https://prod-c467854.s3.eu-north-1.amazonaws.com/accounts/128/files/3oXVxlCDCDjxnh9sPYA7g\\\",\\\"https://prod-5929f14.s3.eu-north-1.amazonaws.com/accounts/136/files/ck57u3urw001d07hd6lbe2ciz\\\"]}" localhost:5000/api/predict
 
 multiple sends a post to the same api address, but with an array of img urls in a json object
 
