@@ -34,8 +34,6 @@ img_size = 224
 
 train_class_img_x=[]
 train_class_img_y=[]
-test_class_img_x=[]
-test_class_img_url=[]
 
 
 for i,im in enumerate(pre['Location']):
@@ -60,7 +58,7 @@ for i,im in enumerate(pre['Location']):
       train_class_img_x = np.array([new_img])
     else:
       train_class_img_x = np.append(train_class_img_x,[new_img],axis=0)
-      train_class_img_y.append(cats) 
+    train_class_img_y.append(cats) 
   except:
     pass
   
@@ -115,7 +113,7 @@ model,base_model = create_model()
 num_base_epoch = 20
 num_all_epoch = num_base_epoch+15
 
-history = model.fit(train_dataset, epochs=num_base_epoch,validation_data=val_dataset)
+history = model.fit(train_dataset, epochs=num_base_epoch,validation_data=val_dataset,verbose=0)
 base_model.trainable = True
 fine_tune_at = 100
 
@@ -127,6 +125,6 @@ model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
               metrics=['accuracy'])
 history_fine = model.fit(train_dataset, epochs=num_all_epoch,
                          initial_epoch=history.epoch[-1],
-                         validation_data=val_dataset)
+                         validation_data=val_dataset,verbose=0)
 
 model.save_weights('./checkpoints/point')

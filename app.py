@@ -8,7 +8,6 @@ import tensorflow as tf
 import os
 
 app = flask.Flask(__name__)
-app.config["DEBUG"] = True
 
 classifications=['VASKEROM', 'KVITTERING', 'VARMTVANNSBEREDER', 'VARMEPUMPE', 'RØRARBEID',
     'KJØKKEN', 'DUSJ', 'SERVANT', 'VARMEKABLER', 'ARBEIDSPLASS', 'RØROPPLEGG', 'VA', 'SLUK',
@@ -39,10 +38,7 @@ class model():
         x = pre_predict(x)
         outputs = prediction_layer(x)
         self.model = tf.keras.Model(inputs, outputs)
-
-        self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
-                        loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-                        metrics=['accuracy'])   
+ 
     def load_checkpoint(self,loc):
         self.model.load_weights(loc)
     def predict(self,img):
@@ -71,25 +67,33 @@ def home():
 
 @app.route('/api/predict')
 def pred_img():
-    url = request.args.get("img")
     try:
+        url = request.args.get("img")
         new_img = conv(url).reshape((1,224,224,3))
+    except Exception as e:
+        return "invalid parameters:"+str(e),400
+    try:
         pred = m.predict(new_img)
         clasif_dict = m.classify(pred[0])
         # return '<img src="'+url+'" height=500><p>'+str(clasif_dict)+'</p>'
-        return clasif_dict
+        return clasif_dict,200
     except Exception as e:
-        return "invalid parameters:"+str(url)+" EX:"+str(e)
+        return str(e),500
     
 @app.route('/api/predict',methods=["POST"])
 def pred_imgs():
-    form = request.get_json()
     try:
-        st_time = time.time()
+        form = request.get_json()
         img_list = form.get("imgs")
+    except Exception as e:
+        return "invalid parameters: {} EX:{}".format(form,e),400
+    try:
         img_arr = np.array([conv(i) for i in img_list])
-        end_time = time.time()
-        ret_dict = {}
         return {img_list[i]:m.classify(pred) for i,pred in enumerate(m.predict(img_arr))}
     except Exception as e:
-        return "invalid parameters: {} EX:{}".format(form,e)
+        return str(e),500
+
+if __name__=='__main__':
+    port = int(os.environ.get('PORT',5000))
+    from waitress import serve
+    serve(app,host='0.0.0.0',port = port)
