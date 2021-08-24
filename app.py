@@ -1,5 +1,5 @@
 import numpy as np
-from PIL import Image
+from tensorflow.keras.preprocessing import image
 import flask
 from flask import request
 import urllib.request 
@@ -23,7 +23,7 @@ class model():
         preprocess_input = tf.keras.applications.mobilenet_v2.preprocess_input
         pre_predict = tf.keras.layers.Dense(200)
         prediction_layer = tf.keras.layers.Dense(len(classifications))
-
+        self.google_model = tf.keras.applications.MobileNetV2(input_shape=(224,224,3))
         self.base_model = tf.keras.applications.MobileNetV2(input_shape=(224,224,3),
                                                         include_top=False, weights='imagenet')
         self.base_model.trainable = False
@@ -51,15 +51,26 @@ class model():
         pred_map.reverse()
         pred_map = pred_map[:5]
         return {p[0]:p[1] for p in pred_map}
+    def google_predict(self,img):
+        google_pred = self.google_model.predict(img)
+        google_labels = tf.keras.applications.mobilenet_v2.decode_predictions(google_pred,top=3)
+        return {i[1]:i[2] for i in google_labels}
 
 m =model()
 m.load_checkpoint("./checkpoints/point")
 def conv(url):
-    nm = "fls/"+url[-10:]+".png"
+  try:
+    nm = "fls/tst.png"
     urllib.request.urlretrieve(url,nm)
-    img = Image.open(nm).convert('RGB')
-    new_img = np.array(img.resize((224,224)))
+    # img = Image.open(nm).convert('RGB')
+    # new_img = np.array(img.resize((224,224)))
+    img = image.load_img(nm, target_size=(224, 224))
+    new_img=image.img_to_array(img)
     return new_img
+  except:
+      raise Exception(url)
+def conv_mult(*urls):
+  return np.array([conv(u) for u in urls])
 
 @app.route('/', methods=['GET'])
 def home():
@@ -89,10 +100,24 @@ def pred_imgs():
         return "invalid parameters: {} EX:{}".format(request.get_data(),e),400
     try:
         img_arr = np.array([conv(i) for i in img_list])
+    except Exception as e:
+        return "url "+str(e),400
+    try:
         return {img_list[i]:m.classify(pred) for i,pred in enumerate(m.predict(img_arr))}
     except Exception as e:
         return str(e),500
 
+@app.route('/api/add',methods=["POST"])
+def add():
+    ...
+
+@app.route('/api/csv')
+def get():
+    ...
+
+@app.route('/train')
+def train():
+    ...
 if __name__=='__main__':
     port = int(os.environ.get('PORT',5000))
     from waitress import serve
