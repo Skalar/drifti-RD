@@ -31,7 +31,6 @@ def getClassificationList():
   except:
       pass
   #print the list to copy to the correct file
-  print("ClassificationList:",l)
   return l
 
 def create_model(train = False):
@@ -86,7 +85,6 @@ def train():
   train_class_img_x=[]
   train_class_img_y=[]
   for i,im in enumerate(pre['Location']):
-    nm = "./fls/"+im[-10:]
     try:
       sp=pre['Category'][i]
       cats=[0 for i in range(len(l))]
@@ -109,27 +107,23 @@ def train():
     except:
       pass
   
-  #grab a validation set 1/9 of the train
-  #usually the validation set should not be a subset of the train set, but I was afraid it may grab all
-  # unique cases, and it wouldn't train on them
-  ch = np.random.choice(len(train_class_img_x),int(len(train_class_img_x)/9),replace=False)
-  ch.sort()
-  val_dataset = tf.data.Dataset.from_tensor_slices((train_class_img_x[ch], np.array(train_class_img_y)[ch]))
   train_dataset = tf.data.Dataset.from_tensor_slices((train_class_img_x, train_class_img_y))
   #you are welcome to change the batch size, make sure it doesn't overwhelm the GPU
   train_dataset =train_dataset.batch(10).shuffle(20)
-  val_dataset = val_dataset.batch(3).shuffle(6)
 
   ## !! this should copy the create_model function found in app.py exactly !!
 
-  model,base_model = create_model()
-
+  model,base_model = create_model(train=True)
+  try:
+    model.load_weights("./checkpoints/point")
+  except:
+    pass
   #I found that it took about 15 epoch to train the base, and then 15 to train the full
   #feel free to change these numbers
   num_base_epoch = 20
   num_all_epoch = num_base_epoch+15
 
-  history = model.fit(train_dataset, epochs=num_base_epoch,validation_data=val_dataset,verbose=0)
+  history = model.fit(train_dataset, epochs=num_base_epoch,verbose=0)
   base_model.trainable = True
   fine_tune_at = 100
 
@@ -139,8 +133,8 @@ def train():
   model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                 optimizer = tf.keras.optimizers.RMSprop(learning_rate=base_learning_rate/10),
                 metrics=['accuracy'])
-  history_fine = model.fit(train_dataset, epochs=num_all_epoch,
-                          initial_epoch=history.epoch[-1],
-                          validation_data=val_dataset,verbose=0)
+  model.fit(train_dataset, epochs=num_all_epoch,
+                initial_epoch=history.epoch[-1],
+                verbose=0)
 
   model.save_weights('./checkpoints/point')

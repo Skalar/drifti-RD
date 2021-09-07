@@ -1,18 +1,16 @@
 import numpy as np
 from tensorflow.keras.preprocessing import image
-import flask
-from flask import request
+from flask import request, send_file,Flask
 import urllib.request 
 import tensorflow as tf
 
 import os
 
-app = flask.Flask(__name__)
+import create_model
 
-classifications=['VASKEROM', 'KVITTERING', 'VARMTVANNSBEREDER', 'VARMEPUMPE', 'RØRARBEID',
-    'KJØKKEN', 'DUSJ', 'SERVANT', 'VARMEKABLER', 'ARBEIDSPLASS', 'RØROPPLEGG', 'VA', 'SLUK',
-    'BUNNLEDNING', 'UTE', 'RADIATOR', 'ARBEIDSTEGNINGER', 'DRENERING', 'BADEROM', 'TOALETT',
-    'FORDELERSKAP', 'KONTOR', 'AVLØP', 'UTEKRAN', 'LAGER']
+app = Flask(__name__)
+
+classifications=create_model.getClassificationList()
 
 base_learning_rate = .0001
 class model():
@@ -23,7 +21,6 @@ class model():
         preprocess_input = tf.keras.applications.mobilenet_v2.preprocess_input
         pre_predict = tf.keras.layers.Dense(200)
         prediction_layer = tf.keras.layers.Dense(len(classifications))
-        self.google_model = tf.keras.applications.MobileNetV2(input_shape=(224,224,3))
         self.base_model = tf.keras.applications.MobileNetV2(input_shape=(224,224,3),
                                                         include_top=False, weights='imagenet')
         self.base_model.trainable = False
@@ -51,10 +48,6 @@ class model():
         pred_map.reverse()
         pred_map = pred_map[:5]
         return {p[0]:p[1] for p in pred_map}
-    def google_predict(self,img):
-        google_pred = self.google_model.predict(img)
-        google_labels = tf.keras.applications.mobilenet_v2.decode_predictions(google_pred,top=3)
-        return {i[1]:i[2] for i in google_labels}
 
 m =model()
 m.load_checkpoint("./checkpoints/point")
@@ -109,15 +102,36 @@ def pred_imgs():
 
 @app.route('/api/add',methods=["POST"])
 def add():
-    ...
+    form = request.get_json()
+    if not form:
+        return "Empty JSON",400
+    endmsg = ''
+    towrite = []
+    for f in form:
+        url = f
+        classes = form[f]
+        for c in classes:
+            if not c.upper() in classifications:
+                endmsg+=" (new class : "+c+" added)"
+        classes = " ".join(classes).upper()
+        towrite.append((url,classes))
+    with open('./model.csv', 'a') as f:
+        for t in towrite:
+            f.write("\n"+",".join(t))
+    return "Success"+endmsg,200
 
 @app.route('/api/csv')
 def get():
-    ...
+    return send_file("./model.csv")
 
-@app.route('/train')
+@app.route('/retrain')
 def train():
-    ...
+    try:
+        create_model.train()
+        return "Success",200
+    except Exception as e:
+        return "error: {}".format(e),500
+
 if __name__=='__main__':
     port = int(os.environ.get('PORT',5000))
     from waitress import serve
