@@ -1,7 +1,14 @@
-#syntax=docker/dockerfile:1
-FROM tensorflow/tensorflow
+FROM node:16
+
+# Create app directory
 WORKDIR /app
-COPY require.txt .
-RUN pip install -r require.txt
+COPY package*.json ./
+
+RUN npm install
+# If you are building your code for production
+# RUN npm ci --only=production
+
 COPY . .
-CMD [ "python3", "app.py"]
+
+EXPOSE 8080
+CMD [ "node", "index.js" ]
