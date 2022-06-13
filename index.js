@@ -11,20 +11,21 @@ app.use("/", express.static("public"));
 app.get('/',(req,res)=>{
     res.send("/public/index.html")
 })
+app.get("/api/csv",(req,res)=>{
+    res.send("files/model.csv")
+})
 app.get("/api/random",(req,res)=>{
-  fs.readFile("files/saveto.csv", "utf-8", function(err, data){
-    if(err) {
-        res.sendStatus(502)
-        res.send(err);
-    }
-    var lines = data.split('\n');
-    
-    // choose one of the lines...
-    var line = lines[Math.floor(Math.random()*lines.length)+1]
+    fs.readFile("files/saveto.csv", "utf-8", function(err, data){
+        if(err) {
+            console.log(err);
+        }
+        var lines = data.split('\n');
+        // choose one of the lines...
+        var line = lines[Math.floor(Math.random()*lines.length)+1]
 
-    // invoke the callback with our line
-    res.send(line);
- })
+        // invoke the callback with our line
+        res.send(line);
+    })
 
 })
 
@@ -49,15 +50,16 @@ app.get("/api/labels",(req,res)=>{
     
 })
 
-app.post("/api/remove",(req,res)=>{
-    console.log(req)
+app.get("/api/remove",(req,res)=>{
+    console.log(req.query.label)
     fs.readFile("files/model.csv", "utf8",function(err,data){
         if(err) throw err;
-        data = data.replace(req.obj," ")
+        data = data.replaceAll(req.query.label," ")
         fs.writeFile("files/model.csv", data, err => {
             if (err) {
               console.error(err);
             }
+            res.send("removed")
         })
     })
 })
@@ -66,11 +68,10 @@ app.post("/api/add",(req,res)=>{
     for (let url in req.body){
         line = '\r\n'+url+','+req.body[url].join(' ')
         fs.writeFile("files/model.csv", line, { flag: 'a' }, err => {
-            res.send(err)
+            console.log(err)
         });
     }
-
-    res.send(req.body)
+    res.end()
 })
 app.listen(8080, (error) =>{
     if(!error)
