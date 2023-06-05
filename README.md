@@ -1,14 +1,29 @@
-# pronto-image-classifer
 
-LaunchPoint for all Drifti R&D projects. 
+# Research & Development
+## Summer project
 
-Can either be run with node, or with docker
+### Compile
+1. npm install
+2. npm audit fix
+3. npm start
 
-node.js:
-- dependencies must be installed, afterwich the application will launch on defaulted port 8080, this can be changed at the top of the index.js file
-- npm install
-- node index.js
+Runs the app in the development mode.\
+Open [http://localhost:8080](http://localhost:8080) to view it in your browser.
 
-docker
-- BUILD: docker build -t driftiRD . --platform linux/amd64
-- RUN: docker run --publish 8080:8080 --rm driftiRD
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
+
+### Frameworks
+1. React/js
+2. Chakra UI: https://chakra-ui.com/getting-started
+
+### Structure
+The source folder consists of:
+1. Folder: assets, components, pages, sections
+2. App.js: routing
+3. index.js: ChakraProvider is set
+4. theme.js: default theme
+
+
+
+

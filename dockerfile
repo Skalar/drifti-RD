@@ -1,14 +1,17 @@
-FROM node:16
+# syntax=docker/dockerfile:1
 
-# Create app directory
+FROM node:latest
+
 WORKDIR /app
-COPY package*.json ./
 
+COPY ["package.json", "package-lock.json*", "./"]
+# COPY ["server/package.json", "server/package-lock.json*", "./server"]
+
+# RUN (cd ./server && npm install)
 RUN npm install
-# If you are building your code for production
-# RUN npm ci --only=production
 
 COPY . .
-
+RUN npm run build
 EXPOSE 8080
-CMD [ "node", "index.js" ]
+
+CMD [ "npm", "start" ]
